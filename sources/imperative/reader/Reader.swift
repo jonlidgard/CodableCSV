@@ -108,15 +108,19 @@ extension CSVReader {
     }
 
   loop: while true {
-    let result: [String]?
+    let result, mergedResult: [String]?
+    
     do {
       result = try self._parseLine(rowIndex: self.count.rows)
     } catch let error {
       self.status = .failed(error as! CSVError<CSVReader>)
       throw error
     }
+    
+    mergedResult = mergeLastFieldDelimiters(result)
+    
     // If no fields were parsed, the EOF has been reached.
-    guard let fields = result else {
+    guard let fields = mergedResult else {
       self.status = .finished
       return nil
     }
@@ -138,8 +142,27 @@ extension CSVReader {
     }
 
     self.count.rows += 1
-    return result
+    return mergedResult
   }
+  }
+}
+
+extension CSVReader {
+  private func mergeLastFieldDelimiters(_ result: [String]?) -> [String]? {
+    guard var mergedResult = result else {
+      return nil
+    }
+    guard case let Strategy.IgnoreDelimitersInLastField.ignore(scalar) = configuration.ignoreDelimitersInLastFieldStrategy else {
+      return result
+    }
+
+    while ( mergedResult.count > self.count.fields ) {
+      if let droppedField = mergedResult.last {
+        mergedResult = mergedResult.dropLast()
+        mergedResult.indices.last.map { mergedResult[$0] += String(scalar) + droppedField}
+      }
+    }
+    return mergedResult
   }
 }
 
