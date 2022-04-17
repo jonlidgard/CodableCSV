@@ -16,7 +16,7 @@ extension CSVReader {
     /// Trims the given characters at the beginning and end of each row, and between fields.
     public var trimStrategy: CharacterSet
     /// Ignores delimiters in last field - useful for parsing some unquoted types of CSV
-    public var ignoreDelimitersInLastFieldStrategy: Strategy.IgnoreDelimitersInLastField
+    public var lastFieldDelimiterStrategy: Strategy.lastFieldDelimiterStrategy
     /// Boolean indicating whether the data/file/string should be completely parsed at reader's initialization.
     public var presample: Bool
 
@@ -26,7 +26,7 @@ extension CSVReader {
       self.delimiters = (field: ",", row: "\n")
       self.escapingStrategy = .doubleQuote
       self.headerStrategy = .none
-      self.ignoreDelimitersInLastFieldStrategy = .no
+      self.lastFieldDelimiterStrategy = .parse
       self.trimStrategy = CharacterSet()
       self.presample = false
     }
@@ -55,21 +55,17 @@ extension Strategy {
 
 
 extension Strategy {
-  /// Indication on whether the CSV file contains headers or not.
-  public enum IgnoreDelimitersInLastField: ExpressibleByNilLiteral, ExpressibleByUnicodeScalarLiteral {
-    /// The CSV contains no header row.
-    case no
-    /// The CSV contains a single header row.
-    case ignore(Unicode.Scalar = ",")
-//    /// It is not known whether the CSV contains a header row. The library will try to infer it!
-//    case unknown
+  public enum lastFieldDelimiterStrategy: ExpressibleByNilLiteral, ExpressibleByBooleanLiteral {
+
+    case parse
+    case ignore
 
     public init(nilLiteral: ()) {
-      self = .no
+      self = .parse
     }
 
-    public init(unicodeScalarLiteral value: Unicode.Scalar) {
-      self = .ignore(value)
+    public init(booleanLiteral value: BooleanLiteralType) {
+      self = (value) ? .ignore : .parse
     }
   }
 }

@@ -21,11 +21,11 @@ extension MyCustomTests {
   func testIgnoreExtraDelimitersInLastField() throws {
     let input = """
   a,b
-  §,B,C
+  §A,BC, DE
   """
     XCTAssertNoThrow(try CSVReader.decode(input: input) {
       $0.headerStrategy = .firstLine
-      $0.ignoreDelimitersInLastFieldStrategy = .ignore()
+      $0.lastFieldDelimiterStrategy = .ignore
     })
   }
 }
